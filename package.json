@@ -5,8 +5,12 @@
   "scripts": {
     "start": "node ./bin/www"
   },
+  "bin": {
+    "wonder": "commands/wonder.js"
+  },
   "dependencies": {
     "body-parser": "~1.18.2",
+    "chalk": "^2.3.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "ejs": "~2.5.7",
@@ -15,6 +19,7 @@
     "morgan": "~1.9.0",
     "request": "^2.83.0",
     "serve-favicon": "~2.4.5",
+    "shelljs": "^0.8.1",
     "state-machine-cat": "^2.2.0"
   }
 }
