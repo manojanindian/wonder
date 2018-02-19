@@ -13,6 +13,8 @@
     "express": "~4.15.5",
     "getmac": "^1.4.0",
     "morgan": "~1.9.0",
-    "serve-favicon": "~2.4.5"
+    "request": "^2.83.0",
+    "serve-favicon": "~2.4.5",
+    "state-machine-cat": "^2.2.0"
   }
 }
