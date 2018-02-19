@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div id="jumbotron" class="jumbotron mt-3" style="text-align:center;">
+        <h1 class="display-4" style="text-align:center;">
+          <span id="tests-complete">0</span>/<span id="total-tests"></span>
+        </h1> 
+        <p id="test-status" class="lead">Best of Luck !</p>
+        <button id="start-testing" type="button" class="btn btn-outline-success btn-lg">Start Testing</button>
+
+        <ul style="text-align:left;margin-top:40px;">
+            <% tests.forEach(function(test) { %>
+              <li id="<%= test %>" ><%= test %></li>
+            <% }); %>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+
+      console.log(window.location.hostname);
+
+			var tests = [<% tests.forEach(function(test) { %>
+        '<%= test %>',
+			<% }); %>];
+      
+			var testsPages = {<% testsPages.forEach(function(page, index) { %>
+        <%= tests[index] %>: "<%= page %>",
+    	<% }); %>};
+
+
+      var testPoolSize = 10;
+      var totalTestsSize = tests.length;
+      var testManager = null;
+
+      document.getElementById('total-tests').innerHTML = totalTestsSize;
+
+      var totalTests = tests;
+
+      var isTestManagerBusy = false;
+      var testPool = [];
+      for(var i=0; i<testPoolSize; i++) {
+        testPool.push(null);
+      }
+
+      document.getElementById('start-testing').addEventListener("click", function() {
+        document.getElementById('jumbotron').removeChild(document.getElementById('start-testing'));
+        document.getElementById('test-status').innerHTML = 'Testing ...';
+        testManager = setInterval(testPoolManager, 100);
+      })
+
+      function testPoolManager() {
+        if(isTestManagerBusy) {
+          return;
+        }
+        
+        for(var i=0; i<testPool.length; i++) {
+          if(testPool[i] === null) {
+            isTestManagerBusy = true;
+            refillPoolIndex(i);
+            break;
+          }
+        }
+      }
+
+      function stopTestPoolManager() {
+        clearInterval(testManager);
+      }
+
+      function freePoolIndex(index) {
+        testPool[index] = null;
+      }
+
+      function refillPoolIndex(index) {
+
+        if(totalTests.length === 0) {
+          stopTestPoolManager();
+          return;
+        }
+
+        var testName = totalTests[totalTests.length -1 ];
+        testPool[index] = new TestExecuter('<%= u %>', testsPages[testName], testName, index);
+        totalTests.pop();
+
+        isTestManagerBusy = false;
+      }
+
+      function oneMoreTestCompleted() {
+        var testComplited = parseInt(document.getElementById('tests-complete').innerHTML) + 1;
+        document.getElementById('tests-complete').innerHTML = testComplited;
+
+        if(testComplited === totalTestsSize)
+          document.getElementById('test-status').innerHTML = 'Testing Completed';
+      }
+
+      function TestExecuter(baseUrl, page, testName, index) {
+        this.poolIndex = index;
+        this.baseUrl = baseUrl;
+        this.page = page;
+        this.testName = testName;
+        this.ifrm = document.createElement("iframe");
+
+        
+
+        this.prepareFrame();
+        window.addEventListener("message", this.receiveMessage.bind(this), false);
+      }
+
+      TestExecuter.prototype.prepareFrame = function() {
+        var numBAH = Math.floor(Math.random()*10000);
+        this.ifrm.setAttribute("src", `http://${window.location.hostname}:3000/fetch?u=${this.baseUrl}&p=${this.page}&t=${this.testName}var=${numBAH}`);
+        this.ifrm.setAttribute("id", this.testName);
+        this.ifrm.style.width = "100%";
+        this.ifrm.style.height = "600px";
+        document.body.appendChild(this.ifrm);
+
+        this.ifrm.onload = this.runTest();
+      }
+
+      TestExecuter.prototype.runTest = function() {
+        
+        setTimeout(function(){
+          this.ifrm.contentWindow.postMessage(this.testName, '*');
+        }.bind(this), 500);
+      }
+
+      TestExecuter.prototype.receiveMessage = function(event) {
+        if(!event.data.location || event.data.location.indexOf(`&t=${this.testName}`) === -1) {
+          return;
+        }
+
+        if(event.data.edge && event.data.edge == this.testName) {
+          this.gotResult = true;
+          this.showResult(event.data.status, event.data.message);
+        }
+      }
+
+      TestExecuter.prototype.showResult = function(status, message) {
+        var updateStatus = document.getElementById(this.testName);
+        if(status) {
+          updateStatus.innerHTML = updateStatus.innerHTML + ` <span style="background: #009688; color: #fff">Pass</span>`;
+        } else {
+          updateStatus.innerHTML = updateStatus.innerHTML + ` <span style="background: #ff5722; color: #fff">Fail</span> ${message}`;
+        }
+        
+        setTimeout(function(){
+          window.removeEventListener("message", this.receiveMessage.bind(this), false);
+          document.body.removeChild(this.ifrm);
+          oneMoreTestCompleted();
+          freePoolIndex(this.poolIndex);
+        }.bind(this), 500);
+      }
+
+    </script>
+  </body>
+</html>

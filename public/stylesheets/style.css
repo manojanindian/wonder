@@ -1,0 +1,14 @@
+body {
+  
+  margin: 0;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.content {
+  padding: 50px;
+}
+
+span {
+  display: inline-content;
+  padding: 5px 20px;
+}
