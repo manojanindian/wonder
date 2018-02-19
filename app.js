@@ -12,6 +12,7 @@ var parserData = require('./routes/parser-data');
 var app = express();
 
 TEST_DOMAIN = 'http://localhost/wonder/iframe';
+SERVER_PORT = 9000;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

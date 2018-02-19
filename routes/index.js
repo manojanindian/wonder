@@ -8,9 +8,26 @@ var fs = require('fs');
 /* GET home page. */
 router.get('/', function(req, res, next) {
 
+	if(req.query.u === '' || req.query.u === undefined) {
+		res.render('getUrl',{
+			port: SERVER_PORT
+		});
+		return;
+	}
 
 	var url = `${req.query.u}/wonder.json`;
+	
 	request(url, function (error, response, body) {
+		try {
+			var testsList = JSON.parse(body);
+		} catch (e) {
+			res.render('error',{
+				message: `Error!!!`,
+				hint: `File "${url}" not created or JSON structure is invalid`
+			})
+			return false;
+		}
+
 		var testsList = JSON.parse(body);
 		var tests = null;
 		var testsPage = null;
@@ -60,7 +77,8 @@ router.get('/', function(req, res, next) {
 				title: 'Wonder',
 				tests: tests,
 				testsPages: testsPage,
-				u: req.query.u
+				u: req.query.u,
+				port: SERVER_PORT
 			});
 		}
 
