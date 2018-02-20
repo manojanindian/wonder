@@ -6,29 +6,33 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+
+    
+
     var url = TEST_DOMAIN + req.originalUrl;
     url = url.split("?")[0];
     var ext =   findContentType.ext.getExt(url);
     var contentType =   findContentType.ext.getContentType(ext);
+   
+    try {
+        var testName = req.headers.referer.match(/&t=(.*)&/g)[0].replace(/&/g,'').replace('t=','');
+    } catch(e) {
+        res.send('');
+        return;
+    }
 
 	request(url, function (error, response, body) {
 
         if(ext === 'js') {
-            var re = /Wonder:Communication/g;
-            body = body.replace(re, function ($1) {
-                return `${$1}\nwindow.addEventListener("message", receiveMessage, false);
-                function receiveMessage(event) {
-                    if(typeof window[event.data] === 'function')
-                        window[event.data](); 
-                }`;
-            });
-
             var re = /Wonder:Test\s+for:{(.*)}\s+test:values{(.*)}/g;
             body = body.replace(re, function ($1) {
 
                 var values = $1.match(/{(.*?)}/g).map(function(val){
                     return val.replace(/{/g,'').replace(/}/g,'');
                 });
+                if(values[0] !== testName) {
+                    return $1;
+                }
 
                 var testData = JSON.parse(`{${values[1]}}`);
 
@@ -63,6 +67,10 @@ router.get('/', function(req, res, next) {
                     return val.replace(/{/g,'').replace(/}/g,'');
                 });
 
+                if(values[0] !== testName) {
+                    return $1;
+                }
+
                 var dataTemplate = '';
                 var data = JSON.parse(`{${values[1]}}`);
 
@@ -77,7 +85,7 @@ router.get('/', function(req, res, next) {
 
                 switch(trigger.event) {
                     case 'click' :
-                        triggerTemplate = `el = document.querySelector('${trigger.selector}');
+                        triggerTemplate = `var el = document.querySelector('${trigger.selector}');
                             if (el.onclick) {
                             el.onclick();
                             } else if (el.click) {
@@ -90,7 +98,7 @@ router.get('/', function(req, res, next) {
                 return `${$1}\nvar ${values[0]} = function() {
                     ${dataTemplate}
                     ${triggerTemplate}
-                }`;
+                }\n${values[0]}()`;
             });
             
             

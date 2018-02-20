@@ -115,20 +115,11 @@
 
       TestExecuter.prototype.prepareFrame = function() {
         var numBAH = Math.floor(Math.random()*10000);
-        this.ifrm.setAttribute("src", `http://${window.location.hostname}:<%= port %>/fetch?u=${this.baseUrl}&p=${this.page}&t=${this.testName}var=${numBAH}`);
+        this.ifrm.setAttribute("src", `http://${window.location.hostname}:<%= port %>/fetch?u=${this.baseUrl}&p=${this.page}&t=${this.testName}&var=${numBAH}`);
         this.ifrm.setAttribute("id", this.testName);
         this.ifrm.style.width = "100%";
         this.ifrm.style.height = "600px";
         document.body.appendChild(this.ifrm);
-
-        this.ifrm.onload = this.runTest();
-      }
-
-      TestExecuter.prototype.runTest = function() {
-        
-        setTimeout(function(){
-          this.ifrm.contentWindow.postMessage(this.testName, '*');
-        }.bind(this), 500);
       }
 
       TestExecuter.prototype.receiveMessage = function(event) {

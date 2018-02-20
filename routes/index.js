@@ -28,7 +28,6 @@ router.get('/', function(req, res, next) {
 			return false;
 		}
 
-		var testsList = JSON.parse(body);
 		var tests = null;
 		var testsPage = null;
 
@@ -43,15 +42,12 @@ router.get('/', function(req, res, next) {
 		
 		machine.getMac(function(err, macAddress){
 			if (err)  throw err
-			console.log(macAddress)
-			console.log(req.headers['user-agent']);
 
 			var fileContent = req.headers['user-agent'];
 			var filepath = `reports/${macAddress}.txt`;
 			
 			fs.writeFile(filepath, fileContent, (err) => {
 				if (err) throw err;
-				console.log("The file was succesfully saved!");
 			}); 
 
 		});
